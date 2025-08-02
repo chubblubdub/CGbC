@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>PDF Switcher</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      background: #f8f8f8;
+    }
+
+    iframe {
+      width: 80%;
+      height: 600px;
+      border: none;
+      transition: opacity 0.5s ease;
+    }
+
+    .controls {
+      margin: 20px;
+    }
+
+    button {
+      margin: 0 5px;
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>Design Variants</h2>
+  <div class="controls">
+    <button onclick="switchPDF(0)">Variant A</button>
+    <button onclick="switchPDF(1)">Variant B</button>
+  </div>
+
+  <iframe id="pdfFrame" src="https://docs.google.com/gview?url=https://raw.githubusercontent.com/yourusername/design-menu/main/variant-a.pdf&embedded=true"></iframe>
+
+  <script>
+    const pdfs = [
+      'https://docs.google.com/gview?url=https://raw.githubusercontent.com/yourusername/design-menu/main/variant-a.pdf&embedded=true',
+      'https://docs.google.com/gview?url=https://raw.githubusercontent.com/yourusername/design-menu/main/variant-b.pdf&embedded=true'
+    ];
+
+    function switchPDF(index) {
+      const frame = document.getElementById('pdfFrame');
+      frame.style.opacity = 0;
+      setTimeout(() => {
+        frame.src = pdfs[index];
+        setTimeout(() => frame.style.opacity = 1, 300);
+      }, 300);
+    }
+  </script>
+
+</body>
+</html>
