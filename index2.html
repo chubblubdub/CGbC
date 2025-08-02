@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>PDF.js Fade Viewer</title>
+  <style>
+    html, body {
+      margin: 0; padding: 0; height: 100%;
+      overflow: hidden;
+      background: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    #pdf-container {
+      position: relative;
+      height: 90vh;
+      width: calc(90vh / 1.608); /* maintain portrait ratio */
+      box-shadow: 0 0 10px rgba(0,0,0,0.15);
+    }
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      opacity: 1;
+      transition: opacity 0.6s ease;
+      position: absolute;
+      top: 0; left: 0;
+    }
+  </style>
+</head>
+<body>
+  <div id="pdf-container"></div>
+
+  <!-- PDF.js library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.9.179/pdf.min.js"></script>
+  <script>
+    const pdfs = [
+      'https://chubblubdub.github.io/CGbC/CGbC_Design_Guide_HD_New.pdf',
+      'https://chubblubdub.github.io/CGbC/CGbC_Design_Guide_HD_New.pdf'
+    ];
+
+    const container = document.getElementById('pdf-container');
+    const canvasPool = [];
+    let currentIndex = 0;
+    let rendering = false;
+
+    // Initialize PDF.js worker
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.9.179/pdf.worker.min.js';
+
+    // Create two canvases for cross-fade effect
+    function createCanvas() {
+      const c = document.createElement('canvas');
+      c.style.opacity = '0';
+      container.appendChild(c);
+      canvasPool.push(c);
+      return c;
+    }
+
+    const canvas1 = createCanvas();
+    const canvas2 = createCanvas();
+
+    // Get canvas context helper
+    function getCtx(canvas) {
+      return canvas.getContext('2d');
+    }
+
+    // Render PDF page into canvas
+    async function renderPDF(url, canvas) {
+      rendering = true;
+      const loadingTask = pdfjsLib.getDocument(url);
+      const pdf = await loadingTask.promise;
+      const page = await pdf.getPage(1); // render first page only
+
+      const viewport = page.getViewport({ scale: 1 });
+      // Scale to fit canvas size maintaining aspect ratio
+      const containerWidth = container.clientWidth;
+      const containerHeight = container.clientHeight;
+
+      const scale = Math.min(containerWidth / viewport.width, containerHeight / viewport.height);
+      const scaledViewport = page.getViewport({ scale });
+
+      canvas.width = scaledViewport.width;
+      canvas.height = scaledViewport.height;
+
+      const context = getCtx(canvas);
+
+      const renderContext = {
+        canvasContext: context,
+        viewport: scaledViewport,
+      };
+
+      await page.render(renderContext).promise;
+      rendering = false;
+    }
+
+    // Crossfade between canvases
+    async function switchPDF() {
+      const nextIndex = (currentIndex + 1) % pdfs.length;
+
+      const currentCanvas = canvasPool[currentIndex % 2];
+      const nextCanvas = canvasPool[(currentIndex + 1) % 2];
+
+      // Render next PDF page on nextCanvas
+      await renderPDF(pdfs[nextIndex], nextCanvas);
+
+      // Fade out currentCanvas and fade in nextCanvas
+      currentCanvas.style.opacity = '0';
+      nextCanvas.style.opacity = '1';
+
+      currentIndex = nextIndex;
+    }
+
+    // Initial render of first PDF on canvas1
+    renderPDF(pdfs[0], canvas1).then(() => {
+      canvas1.style.opacity = '1';
+    });
+
+    // Switch every 5 seconds
+    setInterval(() => {
+      if (!rendering) {
+        switchPDF();
+      }
+    }, 5000);
+  </script>
+</body>
+</html>
