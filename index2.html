@@ -21,12 +21,11 @@
     }
     canvas {
       display: block;
-      width: 100%;
-      height: 100%;
-      opacity: 1;
-      transition: opacity 0.6s ease;
       position: absolute;
       top: 0; left: 0;
+      opacity: 0;
+      transition: opacity 0.6s ease;
+      /* width and height set dynamically in JS for DPI */
     }
   </style>
 </head>
@@ -46,10 +45,10 @@
     let currentIndex = 0;
     let rendering = false;
 
-    // Initialize PDF.js worker
+    // Setup PDF.js worker
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.9.179/pdf.worker.min.js';
 
-    // Create two canvases for cross-fade effect
+    // Create two canvases for crossfade
     function createCanvas() {
       const c = document.createElement('canvas');
       c.style.opacity = '0';
@@ -61,30 +60,31 @@
     const canvas1 = createCanvas();
     const canvas2 = createCanvas();
 
-    // Get canvas context helper
-    function getCtx(canvas) {
-      return canvas.getContext('2d');
-    }
-
-    // Render PDF page into canvas
+    // Render PDF page into canvas with high DPI support
     async function renderPDF(url, canvas) {
       rendering = true;
       const loadingTask = pdfjsLib.getDocument(url);
       const pdf = await loadingTask.promise;
-      const page = await pdf.getPage(1); // render first page only
+      const page = await pdf.getPage(1);
 
       const viewport = page.getViewport({ scale: 1 });
-      // Scale to fit canvas size maintaining aspect ratio
       const containerWidth = container.clientWidth;
       const containerHeight = container.clientHeight;
 
-      const scale = Math.min(containerWidth / viewport.width, containerHeight / viewport.height);
+      const devicePixelRatio = window.devicePixelRatio || 1;
+      const scale = Math.min(containerWidth / viewport.width, containerHeight / viewport.height) * devicePixelRatio;
       const scaledViewport = page.getViewport({ scale });
 
+      // Set actual canvas size for sharpness
       canvas.width = scaledViewport.width;
       canvas.height = scaledViewport.height;
 
-      const context = getCtx(canvas);
+      // Set CSS size to container size for layout consistency
+      canvas.style.width = containerWidth + 'px';
+      canvas.style.height = containerHeight + 'px';
+
+      const context = canvas.getContext('2d');
+      context.setTransform(1, 0, 0, 1, 0, 0); // reset any transforms
 
       const renderContext = {
         canvasContext: context,
@@ -102,22 +102,21 @@
       const currentCanvas = canvasPool[currentIndex % 2];
       const nextCanvas = canvasPool[(currentIndex + 1) % 2];
 
-      // Render next PDF page on nextCanvas
       await renderPDF(pdfs[nextIndex], nextCanvas);
 
-      // Fade out currentCanvas and fade in nextCanvas
+      // Fade out current, fade in next
       currentCanvas.style.opacity = '0';
       nextCanvas.style.opacity = '1';
 
       currentIndex = nextIndex;
     }
 
-    // Initial render of first PDF on canvas1
+    // Initial render and show first PDF on canvas1
     renderPDF(pdfs[0], canvas1).then(() => {
       canvas1.style.opacity = '1';
     });
 
-    // Switch every 5 seconds
+    // Switch PDFs every 5 seconds with fade
     setInterval(() => {
       if (!rendering) {
         switchPDF();
