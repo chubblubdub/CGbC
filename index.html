@@ -16,8 +16,8 @@
     }
 
     iframe {
-      width: 90vw;
-      height: calc(90vw * 1.609); /* Maintains 31.52:50.71 inch ratio */
+      height: 90vh;
+      width: calc(90vh / 1.608); /* Keeps PDF's portrait ratio */
       border: none;
       transition: opacity 0.6s ease;
     }
@@ -35,7 +35,7 @@
   <script>
     const pdfs = [
       'https://chubblubdub.github.io/CGbC/CGbC_Design_Guide_HD_New.pdf',
-      'https://chubblubdub.github.io/CGbC/CGbC_Design_Guide_HD_New.pdf' // Replace with second PDF later
+      'https://chubblubdub.github.io/CGbC/CGbC_Design_Guide_HD_New.pdf'
     ];
 
     let index = 0;
