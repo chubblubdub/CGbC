@@ -1,35 +1,36 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>CGbC Auto-Fading Design Guide</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    body {
-      font-family: sans-serif;
-      text-align: center;
-      background: #f9f9f9;
+    /* Remove margins/padding and ensure no scroll */
+    html, body {
       margin: 0;
       padding: 0;
-    }
-
-    h2 {
-      margin: 20px;
+      height: 100%;
+      overflow: hidden;
+      background: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
 
     iframe {
       height: 90vh;
-      width: calc(90vh / 1.608); /* Keeps PDF's portrait ratio */
+      width: calc(90vh / 1.608); /* maintain portrait ratio */
       border: none;
       transition: opacity 0.6s ease;
+      display: block;
     }
   </style>
 </head>
 <body>
-
-  <h2>CGbC Design Guide Variants</h2>
-
   <iframe
     id="pdfFrame"
-    src="https://chubblubdub.github.io/CGbC/CGbC_Design_Guide_HD_New.pdf">
+    src="https://chubblubdub.github.io/CGbC/CGbC_Design_Guide_HD_New.pdf"
+    type="application/pdf"
+    allowfullscreen>
   </iframe>
 
   <script>
@@ -52,6 +53,5 @@
 
     setInterval(switchPDF, 5000);
   </script>
-
 </body>
 </html>
