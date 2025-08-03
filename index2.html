@@ -8,7 +8,7 @@
     html, body {
       margin: 0; padding: 0; height: 100%;
       overflow: hidden;
-      background: white; /* updated background */
+      background: white; /* white so the shadow is visible */
       display: flex;
       justify-content: center;
       align-items: center;
@@ -16,8 +16,8 @@
     #pdf-container {
       position: relative;
       height: 90vh;
-      width: calc(90vh / 1.608); /* maintain portrait ratio */
-      box-shadow: 0 0 10px rgba(255,255,255,0.15);
+      width: calc(90vh / 1.608); /* portrait ratio */
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.1); /* subtle soft shadow */
     }
     canvas {
       display: block;
@@ -25,8 +25,7 @@
       top: 0; left: 0;
       opacity: 0;
       transition: opacity 0.6s ease;
-      /* width and height set dynamically in JS for DPI */
-      background: black;
+      background: transparent; /* lets the shadow show cleanly */
     }
   </style>
 </head>
@@ -51,7 +50,7 @@
     function createCanvas() {
       const c = document.createElement('canvas');
       c.style.opacity = '0';
-      c.style.background = 'black';
+      c.style.background = 'transparent';
       container.appendChild(c);
       canvasPool.push(c);
       return c;
@@ -71,7 +70,7 @@
       const containerHeight = container.clientHeight;
 
       const devicePixelRatio = window.devicePixelRatio || 1;
-      const qualityFactor = 2; // adjust for sharpness
+      const qualityFactor = 2; // sharper rendering
 
       const scale = Math.min(containerWidth / viewport.width, containerHeight / viewport.height) * devicePixelRatio * qualityFactor;
       const scaledViewport = page.getViewport({ scale });
@@ -100,26 +99,22 @@
       const currentCanvas = canvasPool[currentIndex % 2];
       const nextCanvas = canvasPool[(currentIndex + 1) % 2];
 
-      // Render next PDF fully before fading
       await renderPDF(pdfs[nextIndex], nextCanvas);
 
-      // Fade out current and fade in next canvas simultaneously
       currentCanvas.style.opacity = '0';
       nextCanvas.style.opacity = '1';
 
       currentIndex = nextIndex;
     }
 
-    // Render both canvases initially so both are HD
+    // Render both initially so they're preloaded at full quality
     Promise.all([
       renderPDF(pdfs[0], canvas1),
       renderPDF(pdfs[1], canvas2)
     ]).then(() => {
-      // Show first canvas, hide second initially
       canvas1.style.opacity = '1';
       canvas2.style.opacity = '0';
 
-      // Start interval switching after initial render
       setInterval(() => {
         if (!rendering) {
           switchPDF();
