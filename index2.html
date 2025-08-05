@@ -4,20 +4,23 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Design Guide</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat&display=swap" rel="stylesheet" />
   <style>
     html, body {
       margin: 0; padding: 0; height: 100%;
       overflow: visible;
-      background: white; /* white so the shadow is visible */
+      background: white;
       display: flex;
+      flex-direction: column;
       justify-content: center;
       align-items: center;
+      font-family: 'Montserrat', sans-serif;
     }
     #pdf-container {
       position: relative;
       height: 90vh;
-      width: calc(90vh / 1.608); /* portrait ratio */
-      box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.3); /* subtle soft shadow */
+      width: calc(90vh / 1.608);
+      box-shadow: 0px 0px 20px rgba(0, 0, 0, 0.3);
     }
     canvas {
       display: block;
@@ -25,12 +28,24 @@
       top: 0; left: 0;
       opacity: 0;
       transition: opacity 0.6s ease;
-      background: transparent; /* lets the shadow show cleanly */
+      background: transparent;
+    }
+    #toggle-button {
+      margin-top: 15px;
+      background: black;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      font-size: 14px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-family: 'Montserrat', sans-serif;
     }
   </style>
 </head>
 <body>
   <div id="pdf-container"></div>
+  <button id="toggle-button">⏯︎ pause animation</button>
 
   <!-- PDF.js library -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.9.179/pdf.min.js"></script>
@@ -44,6 +59,8 @@
     const canvasPool = [];
     let currentIndex = 0;
     let rendering = false;
+    let intervalId = null;
+    let isPaused = false;
 
     pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.9.179/pdf.worker.min.js';
 
@@ -70,7 +87,7 @@
       const containerHeight = container.clientHeight;
 
       const devicePixelRatio = window.devicePixelRatio || 1;
-      const qualityFactor = 2; // sharper rendering
+      const qualityFactor = 2;
 
       const scale = Math.min(containerWidth / viewport.width, containerHeight / viewport.height) * devicePixelRatio * qualityFactor;
       const scaledViewport = page.getViewport({ scale });
@@ -107,19 +124,42 @@
       currentIndex = nextIndex;
     }
 
-    // Render both initially so they're preloaded at full quality
+    // Start interval function
+    function startSwitching() {
+      intervalId = setInterval(() => {
+        if (!rendering) {
+          switchPDF();
+        }
+      }, 5000);
+    }
+
+    // Stop interval
+    function stopSwitching() {
+      clearInterval(intervalId);
+      intervalId = null;
+    }
+
+    // Initial render
     Promise.all([
       renderPDF(pdfs[0], canvas1),
       renderPDF(pdfs[1], canvas2)
     ]).then(() => {
       canvas1.style.opacity = '1';
       canvas2.style.opacity = '0';
+      startSwitching();
+    });
 
-      setInterval(() => {
-        if (!rendering) {
-          switchPDF();
-        }
-      }, 5000);
+    // Toggle button
+    const toggleBtn = document.getElementById('toggle-button');
+    toggleBtn.addEventListener('click', () => {
+      isPaused = !isPaused;
+      if (isPaused) {
+        stopSwitching();
+        toggleBtn.textContent = '⏯︎ unpause animation';
+      } else {
+        startSwitching();
+        toggleBtn.textContent = '⏯︎ pause animation';
+      }
     });
   </script>
 </body>
